@@ -97,7 +97,7 @@ hide_streamlit_style = """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # The ADVSEC Executive Header (Existing Code)
-st.image("logo-advsec.jpg", width=700) 
+st.image("logo-advsec.jpg", width=500) 
 
 st.markdown('<p style="font-size: 30px; font-weight: 800; color: #1E3A8A;">🛡️ ADVSEC - PDF Metadata Forensic Testing Portal</p>', unsafe_allow_html=True)
 
