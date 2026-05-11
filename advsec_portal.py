@@ -80,8 +80,24 @@ def perform_deep_scan(pdf_stream, filename):
 # --- PAGE UI ---
 st.set_page_config(page_title="ADVSEC Forensic Portal", layout="wide")
 
-# The ADVSEC Executive Header
-st.image("logo-advsec.jpg", width=500) 
+# --- EXECUTIVE UI POLISH (Hiding Toolbar Clutter) ---
+hide_streamlit_style = """
+            <style>
+            /* Hide the GitHub icon, Star, and Share button */
+            header {visibility: hidden;}
+            
+            /* Ensure the main content isn't shifted too high */
+            .main .block-container {padding-top: 2rem;}
+
+            /* Keep the three-dot menu visible if needed, 
+               or use the line below to hide the entire top bar */
+            #MainMenu {visibility: visible;} 
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+# The ADVSEC Executive Header (Existing Code)
+st.image("logo-advsec.jpg", width=700) 
 
 st.markdown('<p style="font-size: 30px; font-weight: 800; color: #1E3A8A;">🛡️ ADVSEC - PDF Metadata Forensic Testing Portal</p>', unsafe_allow_html=True)
 
