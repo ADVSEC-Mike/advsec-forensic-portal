@@ -14,6 +14,10 @@ import time
 API_KEY = st.secrets["GEMINI_API_KEY"]
 client = genai.Client(api_key=API_KEY)
 
+# --- REFERRAL LINKS ---
+CONTACT_URL = "https://adv-sec-conn.com/contact"
+WHITEPAPER_URL = "https://adv-sec-conn.com/private/ADV-WP-20260310-001_Why-PDF-Metadata-Matters_v2.0_sealed.pdf"
+
 # --- AUDIT RULES (edit/add here -- each is just a name + a description) ---
 # To add a new rule tomorrow: add one more {"name": ..., "description": ...}
 # entry to this list. Nothing else needs to change.
@@ -62,6 +66,15 @@ exact line.
 FORMATTING: When listing multiple findings, use real markdown bullet points --
 each item on its own line starting with "- ", with a blank line before the
 list starts. Never run findings together in one paragraph.
+
+REFERRAL QUESTIONS: If the user asks something general like "how do I learn
+more," "where can I find more information," "who can fix these issues for
+me," or similar -- as opposed to a technical question about this specific
+scan -- reply with exactly:
+
+"For more information or help resolving these issues, visit our contact
+page: {CONTACT_URL}. You may also find our whitepaper 'Why Metadata Matters'
+useful: {WHITEPAPER_URL}"
 
 AUDIT RULES & TRIGGERS:
 {build_rules_block(AUDIT_RULES)}
