@@ -59,6 +59,10 @@ reply with exactly: "I don't have that answer." Do not attempt to answer
 outside-scope questions in any other way, and do not soften or rephrase that
 exact line.
 
+FORMATTING: When listing multiple findings, use real markdown bullet points --
+each item on its own line starting with "- ", with a blank line before the
+list starts. Never run findings together in one paragraph.
+
 AUDIT RULES & TRIGGERS:
 {build_rules_block(AUDIT_RULES)}
 Also identify Ghosts/Compliance Violations/Canva Trackers/JavaScript Threats.
