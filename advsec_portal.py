@@ -234,8 +234,8 @@ if st.session_state.scroll_to_top:
 @st.dialog("ADVSEC Forensic Shield")
 def show_shield():
     st.warning("⚠️ **PDF Metadata SCAN AUTHORIZED**")
-    st.write("This audit scans the referenced PDF for Layer-3 Metadata and performs a Deep Scan for user-fields, Copyright Status, Certificates, & embedded executable logic (JavaScript). No content from any of the three layers in the referenced PDF is stored or shared.")
-    if st.button("CONFIRM & EXECUTE"):
+    st.write("This audit scans the referenced PDF for Layer-3 Metadata and performs a Deep Scan for the metadata.")
+    if st.button("CONFIRM"):
         st.session_state.processing = True
         st.session_state.messages = []
         st.session_state.manifest_data = None # Ensure clean slate
