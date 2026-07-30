@@ -16,7 +16,7 @@ client = genai.Client(api_key=API_KEY)
 
 # --- REFERRAL LINKS ---
 CONTACT_URL = "https://adv-sec-conn.com/contact"
-WHITEPAPER_URL = "https://adv-sec-conn.com/private/ADV-WP-20260310-001_Why-PDF-Metadata-Matters_v2.0_sealed.pdf"
+WHITEPAPER_URL = "https://adv-sec-conn.com/resources/ADV-WP-20260310-001_Why-PDF-Metadata-Matters_v2.0_sealed.pdf"
 
 # --- AUDIT RULES (edit/add here -- each is just a name + a description) ---
 # To add a new rule tomorrow: add one more {"name": ..., "description": ...}
@@ -34,7 +34,7 @@ AUDIT_RULES = [
      "fix": "Apply a digital signature from a real Document Signing Certificate (e.g. an OV cert through a CSC-based signing service) so authenticity and provenance become verifiable."},
     {"name": "JAVASCRIPT EXPLOIT", "description": "If the scan flags embedded JavaScript as a threat, reference CVE-2026-34621 (Adobe Acrobat prototype-pollution / sandbox-escape vulnerability, actively exploited in the wild) and flag as a 'Cybersecurity Red Flag.'",
      "fix": "Strip embedded JavaScript entirely before distribution -- document-level actions (/OpenAction, /Names JavaScript) and page/annotation-level actions (/AA, /A) should all be removed, not just the visible symptoms."},
-    {"name": "DOCUMENT CONTROL RISK", "description": "If Copyright metadata is missing, note that ISO-9001-certified organizations are required to control documented information (Clause 7.5) -- raise as a question worth the client examining, not a declared violation: once a document leaves an organization's servers without copyright metadata anchoring it, is that information still meaningfully 'under control'?",
+    {"name": "DOCUMENT CONTROL RISK", "description": "If Copyright metadata is missing, state: 'Document control is incomplete; copyright/ownership metadata is missing.'This is a risk to the organization because it leaves the document's ownership and provenance unverifiable in the AI architecture.",
      "fix": "Establish a documented process that anchors copyright/ownership metadata to every publicly distributed PDF as part of the organization's document-control procedure."},
     {"name": "VERIFIED COMPLIANT", "description": "If Title, Author, Copyright Notice, and Copyright URL are all present, Cert-Status shows a valid seal, and JS-Status is clean, state plainly that this document meets ADVSEC's metadata integrity standard -- properly attributed, anchored, and verifiable for both human and AI consumption. Lead with this when it applies; don't bury a clean result under a search for problems that aren't there.",
      "fix": "No fix needed -- this is the standard to maintain. Keep using the same metadata/signing process for future publications so this remains the outcome."},
