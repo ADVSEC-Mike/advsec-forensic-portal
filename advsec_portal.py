@@ -32,7 +32,7 @@ AUDIT_RULES = [
      "fix": "Add a Copyright Notice and a Copyright URL pointing back to the canonical source, in both the classic Info dictionary and the XMP rights fields (not just printed on the visible page)."},
     {"name": "PROVENANCE FAILURE", "description": "If Certificate is 'None', state: 'Document authenticity cannot be verified; provenance is null.' This document is an orphan, without a verifiable https:// URL pointing back to its owner.",
      "fix": "Apply a digital signature from a real Document Signing Certificate (e.g. an OV cert through a CSC-based signing service) so authenticity and provenance become verifiable."},
-    {"name": "JAVASCRIPT EXPLOIT", "description": "If the scan flags embedded JavaScript as a threat, reference CVE-2026-34621 (Adobe Acrobat prototype-pollution / sandbox-escape vulnerability, actively exploited in the wild) and flag as a 'Cybersecurity Red Flag.'",
+    {"name": "JAVASCRIPT EXPLOIT", "description": "Check JS-Status and JS-Detail together. If JS-Status shows a THREAT or JS DETECTED result, cite the specific location(s) listed in JS-Detail (e.g. which /OpenAction, /Names tree, page, or annotation) rather than a generic claim. Only reference CVE-2026-34621 (Adobe Acrobat prototype-pollution / sandbox-escape vulnerability, actively exploited in the wild) when JS-Status specifically shows the THREAT variant -- never when it shows CLEAN or the general JS-DETECTED variant. If JS-Status is CLEAN, state plainly that no embedded JavaScript actions were found anywhere in the document structure -- do not speculate about JavaScript risk on a clean result.",
      "fix": "Strip embedded JavaScript entirely before distribution -- document-level actions (/OpenAction, /Names JavaScript) and page/annotation-level actions (/AA, /A) should all be removed, not just the visible symptoms."},
     {"name": "DOCUMENT CONTROL RISK", "description": "If Copyright metadata is missing, state: 'Document control is incomplete; copyright/ownership metadata is missing.'This is a risk to the organization because it leaves the document's ownership and provenance unverifiable in the AI architecture.",
      "fix": "Establish a documented process that anchors copyright/ownership metadata to every publicly distributed PDF as part of the organization's document-control procedure."},
@@ -122,6 +122,50 @@ def harvest_xmp_url(xmp_str):
     match = re.search(r"<xmpRights:WebStatement>(.*?)</xmpRights:WebStatement>", xmp_str)
     return match.group(1) if match else "NOT DETECTED"
 
+def find_javascript_locations(root_object, pages):
+    """
+    Scans a PDF's actual catalog + pages/annotations for embedded JavaScript
+    actions (/OpenAction, document-level /Names JavaScript tree, page /AA,
+    and annotation /A or /AA actions). This replaces a raw-text substring
+    scan across the whole decoded file -- that approach couldn't tell a real
+    JS action apart from those same characters occurring by coincidence
+    inside binary font/image stream data, which produced false positives.
+    Returns a list of dicts: {"location": str, "js_code": str}. An empty
+    list means no JavaScript action exists anywhere in the object tree.
+    """
+    found = []
+    try:
+        if "/OpenAction" in root_object:
+            oa = root_object["/OpenAction"]
+            oa_obj = oa.get_object() if hasattr(oa, "get_object") else oa
+            if isinstance(oa_obj, dict) and oa_obj.get("/S") == "/JavaScript":
+                js = oa_obj.get("/JS")
+                found.append({"location": "Document /OpenAction", "js_code": str(js) if js else ""})
+        if "/Names" in root_object:
+            names = root_object["/Names"]
+            names_obj = names.get_object() if hasattr(names, "get_object") else names
+            if isinstance(names_obj, dict) and "/JavaScript" in names_obj:
+                found.append({"location": "Document-level /Names JavaScript tree", "js_code": ""})
+    except Exception:
+        pass
+
+    for i, page in enumerate(pages):
+        try:
+            if "/AA" in page:
+                found.append({"location": f"Page {i + 1} additional action (/AA)", "js_code": ""})
+            if "/Annots" in page:
+                for annot in page["/Annots"]:
+                    annot_obj = annot.get_object() if hasattr(annot, "get_object") else annot
+                    a = annot_obj.get("/A")
+                    if isinstance(a, dict) and a.get("/S") == "/JavaScript":
+                        js = a.get("/JS")
+                        found.append({"location": f"Page {i + 1} annotation /A JavaScript", "js_code": str(js) if js else ""})
+                    if "/AA" in annot_obj:
+                        found.append({"location": f"Page {i + 1} annotation /AA", "js_code": ""})
+        except Exception:
+            continue
+    return found
+
 # --- UI COMPONENT FOR STATUS BADGES ---
 def display_sovereignty_status(m):
     score = 0
@@ -158,13 +202,28 @@ def perform_deep_scan(pdf_stream, filename):
             xmp_raw = str(xmp_obj.get_object().get_data(), 'utf-8', 'ignore')
     except: xmp_raw = ""
 
-    raw_content = pdf_stream.getvalue().decode('latin-1', errors='ignore')
-    js_found = "/JS" in raw_content or "/JavaScript" in raw_content
-    cve_trigger = "app.beginPriv" in raw_content or "app.trustedFunction" in raw_content
+    # Object-tree based detection -- walks the actual PDF structure instead
+    # of scanning raw decoded bytes for characters like "/JS".
+    js_locations = find_javascript_locations(reader.root_object, reader.pages)
 
-    if cve_trigger: js_display = "🚨 THREAT (CVE-2026-34621)"
-    elif js_found: js_display = "⚠️ JS DETECTED (Logic Ghost)"
-    else: js_display = "✅ CLEAN"
+    # Only check for the CVE-2026-34621 escalation API calls inside the
+    # actual JS code of a confirmed action -- never across the raw file.
+    cve_trigger = any(
+        "app.beginPriv" in loc.get("js_code", "") or "app.trustedFunction" in loc.get("js_code", "")
+        for loc in js_locations
+    )
+
+    if cve_trigger:
+        js_display = "🚨 THREAT (CVE-2026-34621)"
+    elif js_locations:
+        js_display = "⚠️ JS DETECTED (Logic Ghost)"
+    else:
+        js_display = "✅ CLEAN"
+
+    js_detail = (
+        "; ".join(loc["location"] for loc in js_locations) if js_locations
+        else "No JavaScript actions found (checked /OpenAction, /Names tree, all pages and annotations)"
+    )
 
     return {
         "File-Name": filename,
@@ -173,6 +232,7 @@ def perform_deep_scan(pdf_stream, filename):
         "xmp": xmp_raw,
         "root": raw_root,
         "js_status": js_display,
+        "js_detail": js_detail,
         "copy_url": harvest_xmp_url(xmp_raw)
     }
 
@@ -284,6 +344,7 @@ if st.session_state.processing:
             "Copyright-URL": results["copy_url"],
             "Cert-Status": results["Cert-Status"],
             "JS-Status": results["js_status"],
+            "JS-Detail": results["js_detail"],
             "xmp_dna": results["xmp"][:2000],
             "raw_root": results["root"]
         }
