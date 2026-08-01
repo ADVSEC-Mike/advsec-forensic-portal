@@ -301,18 +301,6 @@ if st.session_state.scroll_to_top:
     components.html("<script>window.parent.scrollTo({top: 0, behavior: 'instant'});</script>", height=0)
     st.session_state.scroll_to_top = False
 
-@st.dialog("ADVSEC Forensic Shield")
-def show_shield():
-    st.warning("⚠️ **PDF Metadata SCAN AUTHORIZED**")
-    st.write("This audit scans the referenced PDF for Layer-3 Metadata and performs a Deep Scan for the metadata.")
-    if st.button("CONFIRM"):
-        st.session_state.processing = True
-        st.session_state.messages = []
-        st.session_state.manifest_data = None # Ensure clean slate
-        st.session_state.scroll_to_top = True
-        st.session_state.user_question_count = 0
-        st.rerun()
-
 _, input_col, _ = st.columns([1, 2, 1])
 with input_col:
     with st.container(border=True):
@@ -333,8 +321,14 @@ with input_col:
                 pdf_data = BytesIO(uploaded.read())
                 current_filename = uploaded.name
 
-        if pdf_data and not st.session_state.processing:
-            if st.button("START SCAN"): show_shield()
+if pdf_data and not st.session_state.processing:
+            if st.button("START SCAN"):
+                st.session_state.processing = True
+                st.session_state.messages = []
+                st.session_state.manifest_data = None
+                st.session_state.scroll_to_top = True
+                st.session_state.user_question_count = 0
+                st.rerun()
 
 # --- THE REPORT & INTERACTIVE CHAT ---
 if st.session_state.processing:
