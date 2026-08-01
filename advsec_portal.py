@@ -168,14 +168,24 @@ def find_javascript_locations(root_object, pages):
 
 # --- UI COMPONENT FOR STATUS BADGES ---
 def display_sovereignty_status(m):
+    all_clean = (
+        m['Title'] != 'MISSING'
+        and m['Author'] != 'MISSING'
+        and m['Copyright-Notice'] != 'NOT DETECTED'
+        and m['Copyright-URL'] != 'NOT DETECTED'
+        and "✅" in m['Cert-Status']
+        and "✅" in m['JS-Status']
+    )
+
     score = 0
     if m['Title'] != 'MISSING': score += 1
     if m['Author'] != 'MISSING': score += 1
     if m['Copyright-Notice'] != 'NOT DETECTED': score += 1
+    if m['Copyright-URL'] != 'NOT DETECTED': score += 1
     if "✅" in m['Cert-Status']: score += 2
     if "✅" in m['JS-Status']: score += 1
 
-    if score >= 5:
+    if all_clean:
         border, bg, text = "#1B5E20", "#E8F5E9", "🔒 DOCUMENT STATUS: SECURE & AI-FRIENDLY"
     elif score >= 3:
         border, bg, text = "#8A6D00", "#FFF8E1", "⚠️ DOCUMENT STATUS: COMPLIANCE WARNING"
