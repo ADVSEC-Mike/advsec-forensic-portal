@@ -190,7 +190,7 @@ def display_sovereignty_status(m):
     elif score >= 3:
         border, bg, text = "#8A6D00", "#FFF8E1", "⚠️ DOCUMENT STATUS: COMPLIANCE WARNING"
     else:
-        border, bg, text = "#B71C1C", "#FFEBEE", "🚨 DOCUMENT STATUS: SOVEREIGNTY RISK"
+        border, bg, text = "#B71C1C", "#FFEBEE", "🚨 DOCUMENT STATUS: OWNERSHIP RISK"
 
     st.markdown(
         f"""<div style="display:inline-block; padding:10px 24px; border-radius:999px;
@@ -390,7 +390,7 @@ if st.session_state.processing:
             for attempt in range(3):
                 try:
                     response = client.models.generate_content(
-                        model="gemini-2.5-flash",
+                        model="gemini-3.6-flash",
                         contents=initial_contents,
                         config=types.GenerateContentConfig(system_instruction=LEAD_AUDITOR_SYSTEM_INSTRUCTION),
                     )
@@ -443,7 +443,7 @@ if st.session_state.processing:
                     for attempt in range(3):
                         try:
                             response = client.models.generate_content(
-                                model="gemini-2.5-flash",
+                                model="gemini-3.6-flash",
                                 contents=follow_up_contents,
                                 config=types.GenerateContentConfig(system_instruction=LEAD_AUDITOR_SYSTEM_INSTRUCTION),
                             )
